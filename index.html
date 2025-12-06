@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-TW" itemscope itemtype="https://schema.org/WebPage">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>WebP 轉 PNG 轉換器 | 免費、離線、保留透明背景 (WebP to PNG)</title>
+    <meta name="description" content="2025年最佳 WebP 轉 PNG 工具。支援批量轉換、保留透明背景(Alpha Channel)、100% 瀏覽器離線處理。Free, Offline, Privacy-First WebP to PNG Converter.">
+    <link rel="canonical" href="https://webp-to-png.inisyght.online/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="WebP 轉 PNG 轉換器 - 保留透明背景" />
+    <meta property="og:description" content="不需上傳照片，直接在瀏覽器內轉換，完美保留透明度。" />
+    <meta property="og:image" content="https://webp-to-png.inisyght.online/assets/images/og-image.jpg" />
+    <meta property="og:url" content="https://webp-to-png.inisyght.online/" />
+    <meta property="og:site_name" content="WebP to PNG Tool" />
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="assets/images/icons/apple-touch-icon.png">
+
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "WebP to PNG Converter",
+        "headline": "Free Offline WebP to PNG Converter",
+        "url": "https://webp-to-png.inisyght.online/",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
+        "featureList": [ "100% Client-side Processing", "No Server Upload", "Batch Conversion Support", "PWA Offline Capable", "Preserves Transparency" ]
+      }
+    ]
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen">
+
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600 flex items-center gap-2">
+                ⚡ WebP to PNG
+            </h1>
+            <div class="flex items-center gap-3">
+                <button id="install-btn" class="hidden flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-200 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span data-i18n="btn_install">安裝 App</span>
+                </button>
+                <select id="lang-switch" class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="zh-TW">繁體中文</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto mt-4 px-4">
+        <div class="bg-gray-200 h-24 rounded flex items-center justify-center text-gray-400 text-sm border-dashed border-2 border-gray-300">
+            Ad Space (Responsive)
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-grow">
+
+        <section aria-label="Image Converter Tool">
+            <div id="drop-zone" class="bg-white border-4 border-dashed border-blue-200 rounded-xl p-10 text-center cursor-pointer hover:border-blue-400 transition-colors relative shadow-sm">
+                <input type="file" id="file-input" class="hidden" accept="image/webp" multiple>
+                <div class="pointer-events-none">
+                    <svg class="w-16 h-16 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <h2 class="text-2xl font-bold mb-2" data-i18n="drag_drop_title">拖曳 WebP 圖片到這裡</h2>
+                    <p class="text-gray-500" data-i18n="drag_drop_subtitle">或者點擊上傳 (支援批量)</p>
+                </div>
+            </div>
+
+            <div id="action-bar" class="hidden mt-6 bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <span class="text-sm font-medium text-gray-600 self-start md:self-center">
+                    <span id="file-count">0</span> <span data-i18n="files_selected">個檔案</span>
+                </span>
+                <div class="flex gap-3 w-full md:w-auto">
+                    <button id="clear-btn" class="flex-1 md:flex-none px-4 py-2 text-red-500 hover:bg-red-50 rounded transition text-sm font-medium" data-i18n="btn_clear">清空</button>
+                    <button id="convert-all-btn" class="flex-1 md:flex-none px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition font-medium whitespace-nowrap" data-i18n="btn_convert_all">全部轉換並下載 PNG</button>
+                </div>
+            </div>
+
+            <div id="file-list" class="mt-6 grid gap-4 grid-cols-1 md:grid-cols-2"></div>
+        </section>
+
+        <article class="mt-16 prose prose-blue max-w-none text-gray-600">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6" data-i18n="seo_title">為什麼選擇我們的 WebP 轉 PNG 工具？</h2>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-10">
+                <section class="flex flex-col items-start">
+                    <div class="bg-purple-100 p-3 rounded-full mb-3">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2" data-i18n="feat_transparency_title">完整保留透明背景</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed" data-i18n="feat_transparency_desc">與 JPG 不同，PNG 格式支援透明度。本工具能完美保留 WebP 原圖的去背效果，非常適合貼圖與設計素材轉換。</p>
+                </section>
+
+                <section class="flex flex-col items-start">
+                    <div class="bg-blue-100 p-3 rounded-full mb-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2" data-i18n="feat_offline_title">離線也能用</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed" data-i18n="feat_offline_desc">本工具支援 PWA 技術。您可以將其安裝到桌面或手機，即便在沒有網路的環境下，也能隨時進行 WebP 轉 PNG。</p>
+                </section>
+            </div>
+
+            <section class="bg-blue-50 p-6 rounded-lg">
+                <h3 class="text-lg font-bold text-gray-800 mb-4" data-i18n="faq_title">常見問題 (FAQ)</h3>
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-700" data-i18n="faq_q1">Q: WebP 轉 PNG 會遺失透明度嗎？</h4>
+                        <p class="text-sm text-gray-600" data-i18n="faq_a1">A: 不會。我們的工具經過優化，能 100% 保留原始圖片的透明背景 (Alpha Channel)。</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-700" data-i18n="faq_q2">Q: PNG 檔案會比 WebP 大嗎？</h4>
+                        <p class="text-sm text-gray-600" data-i18n="faq_a2">A: 是的，通常 PNG 檔案會比 WebP 稍大，因為 PNG 採用無失真壓縮，畫質更好。</p>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+       <section class="mt-12 pt-8 border-t border-gray-200">
+            <h3 class="text-center text-gray-500 text-sm font-medium mb-6 uppercase tracking-wider">更多實用工具 (More Tools)</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div class="bg-blue-50 border-2 border-blue-500 p-4 rounded-xl flex items-center justify-between cursor-default">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-200 p-2 rounded-lg"><span class="text-xl">⚡</span></div>
+                        <div>
+                            <h4 class="font-bold text-blue-900">WebP 轉 JPG</h4>
+                            <p class="text-xs text-blue-700">目前使用中</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold bg-blue-200 text-blue-800 px-2 py-1 rounded">Active</span>
+                </div>
+
+                <a href="https://webp-to-png.inisyght.online" class="group bg-white border border-gray-200 hover:border-purple-400 hover:shadow-md p-4 rounded-xl flex items-center justify-between transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gray-100 group-hover:bg-purple-100 p-2 rounded-lg transition-colors">
+                            <span class="text-xl">🖼️</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-700 group-hover:text-purple-600 transition-colors">WebP 轉 PNG</h4>
+                            <p class="text-xs text-gray-500">保留透明背景</p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400 group-hover:text-purple-500 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </a>
+
+                <a href="https://jpg-to-webp.inisyght.online" class="group bg-white border border-gray-200 hover:border-green-400 hover:shadow-md p-4 rounded-xl flex items-center justify-between transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gray-100 group-hover:bg-green-100 p-2 rounded-lg transition-colors">
+                            <span class="text-xl">🚀</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-700 group-hover:text-green-600 transition-colors">JPG 轉 WebP</h4>
+                            <p class="text-xs text-gray-500">網站加速必備</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold bg-green-100 text-green-600 px-2 py-0.5 rounded-full border border-green-200">HOT</span>
+                </a>
+
+                </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 py-6 mt-8 border-t border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 text-center text-sm text-gray-500">
+            <p>&copy; 2025 WebP to PNG Tool. All rights reserved.</p>
+            <div class="mt-2 space-x-4">
+                <a href="legal/privacy.html" class="hover:text-blue-600 underline" rel="nofollow">Privacy Policy</a>
+                <a href="legal/terms.html" class="hover:text-blue-600 underline" rel="nofollow">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>
